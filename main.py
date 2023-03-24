@@ -4,51 +4,57 @@ import numpy as np
 import cv2
 import time
 
+#screen = pyautogui.screenshot('zdj.png',region=(250,205,1420,760))
+#screen1 = pyautogui.screenshot('zdj1.png',region=(250,205,1420,760))
 
-#res = pyatogui.locateOnScreen("nazwa pliku png") wyszkuje danego obrazu z liku na ekranie
-#print(pyautogui.center(res)) printuje koordy na ktorych znajduje sie dany obraz taki sam jak w pliku
-#pyautogui.moveTo() przesowa kursor w dana lokacje na ekranie
-#res = pyautoguiv.locateCensterOnScreen("nazwa pliku png") znajduje srodek zdjecia na ekranie
+screen_X = 250
+screen_Y = 205
+screen_W = 1420
+screen_H = 760
 
-#res = pyautogui.locateCenterOnScreen("targets/mob.png")
-#print(pyscreeze.locateCenterOnScreen("swierszcz.png"))
-#check = pyautogui.locateOnScreen("targets/test.png")
-screen = pyautogui.screenshot('zdj.png',region=(250,205,1420,760))
-time.sleep(32)
-screen1 = pyautogui.screenshot('zdj1.png',region=(250,205,1420,760))
+def Screenshot(x,y,w,h):
+    screenshot = pyautogui.screenshot(region=(x,y,w,h))
+    image = np.array(screenshot)
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    return image
 
-img1 = cv2.imread('zdj.png')
-img2 = cv2.imread('zdj1.png')
+def Diff(img1 , img2):
+    return cv2.subtract(img1 , img2)
+
+def LocateObj(diff):
+    contours, _ = cv2.findContours(diff, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contours_poly = [None] * len(contours)
+    boundRect = [None] * len(contours)
+    centers = [None] * len(contours)
+    radius = [None] * len(contours)
+
+    for i, c in enumerate(contours):
+        contours_poly[i] = cv2.approxPolyDP(c, 3, True)
+        boundRect[i] = cv2.boundingRect(contours_poly[i])
+        centers[i], radius[i] = cv2.minEnclosingCircle(contours_poly[i])
+
+    return centers
+
+img1 = Screenshot(screen_X,screen_Y,screen_W,screen_H)
+time.sleep(10)
+img2 = Screenshot(screen_X,screen_Y,screen_W,screen_H)
 img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
 img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
-def mse(img1, img2):
-   h, w = img1.shape
-   diff = cv2.subtract(img1, img2)
-   err = np.sum(diff**2)
-   mse = err/(float(h*w))
-   return mse, diff
-
-error, diff = mse(img1, img2)
-
+diff = Diff(img1, img2)
 diff = cv2.Canny(diff, 127, 127 * 2)
 
-contours, _ = cv2.findContours(diff, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+centers = LocateObj(diff)
 
-contours_poly = [None]*len(contours)
-boundRect = [None]*len(contours)
-centers = [None]*len(contours)
-radius = [None]*len(contours)
-for i, c in enumerate(contours):
-    contours_poly[i] = cv2.approxPolyDP(c, 3, True)
-    boundRect[i] = cv2.boundingRect(contours_poly[i])
-    centers[i], radius[i] = cv2.minEnclosingCircle(contours_poly[i])
+middle = (screen_W / 2, screen_H / 2)
 
-print("Image matching Error between the two images:",error)
+def DisToMid(point):
+    return ((middle[0]-point[0])**2+(middle[1]-point[1])**2)**0.5
 
-#cv2.circle(diff,(int(centers[0][0]), int(centers[0][1])), 10 , (255,0,0) ,-1)
+centers = sorted(centers, key=DisToMid)
 
 pyautogui.moveTo(int(centers[0][0]+250), int(centers[0][1]+200))
+
 time.sleep(1)
 zuk = pyautogui.locateCenterOnScreen("zuk.png")
 time.sleep(1)
@@ -60,8 +66,10 @@ if(zuk != None):
     pyautogui.hotkey("z")
 
 
-#cv2.imshow("difference", diff)
+cv2.imshow("difference", diff)
 cv2.waitKey(0)
 #cv2.destroyAllWindows()
+
+
 
 
