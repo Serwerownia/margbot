@@ -1,4 +1,5 @@
 import pyautogui
+from threading import Thread
 import pyscreeze
 import numpy as np
 import cv2
@@ -6,11 +7,60 @@ import time
 
 #screen = pyautogui.screenshot('zdj.png',region=(250,205,1420,760))
 #screen1 = pyautogui.screenshot('zdj1.png',region=(250,205,1420,760))
+zdj = pyautogui.screenshot('zdj.png',region=(250,205,1420,760))
 
 screen_X = 250
 screen_Y = 205
 screen_W = 1420
 screen_H = 760
+
+bot_run = True
+
+def BotLoop():
+    current_img = None
+    priev_img = Screenshot(screen_X, screen_Y, screen_W, screen_H)
+    priev_img = cv2.cvtColor(priev_img, cv2.COLOR_BGR2GRAY)
+    while(bot_run == True):
+        current_img = Screenshot(screen_X, screen_Y, screen_W, screen_H)
+        time.sleep(5)
+        current_img = cv2.cvtColor(current_img, cv2.COLOR_BGR2GRAY)
+
+        diff = Diff(current_img, priev_img)
+        diff = cv2.Canny(diff, 127, 127 * 2)
+
+        priev_img = current_img
+
+        centers = LocateObj(diff)
+
+        if(len(centers) == 0):
+            print("nie ma roznic")
+            continue
+
+        middle = (screen_W / 2, screen_H / 2)
+        def DisToMid(point):
+            return ((middle[0] - point[0]) ** 2 + (middle[1] - point[1]) ** 2) ** 0.5
+        centers = sorted(centers, key=DisToMid)
+
+        pyautogui.moveTo(int(centers[0][0] + 250), int(centers[0][1] + 205))
+
+        time.sleep(1)
+        zuk = pyautogui.locateCenterOnScreen("zuk.png")
+        time.sleep(1)
+        if (zuk != None):
+            pyautogui.click()
+            time.sleep(1)
+            pyautogui.hotkey("f")
+            time.sleep(1)
+            pyautogui.hotkey("z")
+
+        time.sleep(1)
+        pot = pyautogui.locateCenterOnScreen("potwierdz.png")
+        time.sleep(1)
+        if (pot != None):
+            pyautogui.moveTo(int(pot[0]), int(pot[1]))
+            pyautogui.click()
+
+        pyautogui.moveTo(1,1)
 
 def Screenshot(x,y,w,h):
     screenshot = pyautogui.screenshot(region=(x,y,w,h))
@@ -35,38 +85,20 @@ def LocateObj(diff):
 
     return centers
 
-img1 = Screenshot(screen_X,screen_Y,screen_W,screen_H)
-time.sleep(10)
-img2 = Screenshot(screen_X,screen_Y,screen_W,screen_H)
-img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+def Main():
+    global bot_run
+    new_thread = Thread(target=BotLoop)
+    new_thread.start()
+    while(True):
+        xD = input()
+        if(xD == 'q'):
+            bot_run = False
+            break
 
-diff = Diff(img1, img2)
-diff = cv2.Canny(diff, 127, 127 * 2)
+    new_thread.join()
 
-centers = LocateObj(diff)
-
-middle = (screen_W / 2, screen_H / 2)
-
-def DisToMid(point):
-    return ((middle[0]-point[0])**2+(middle[1]-point[1])**2)**0.5
-
-centers = sorted(centers, key=DisToMid)
-
-pyautogui.moveTo(int(centers[0][0]+250), int(centers[0][1]+200))
-
-time.sleep(1)
-zuk = pyautogui.locateCenterOnScreen("zuk.png")
-time.sleep(1)
-if(zuk != None):
-    pyautogui.click()
-    time.sleep(1)
-    pyautogui.hotkey("f")
-    time.sleep(1)
-    pyautogui.hotkey("z")
-
-
-cv2.imshow("difference", diff)
+Main()
+#cv2.imshow("difference", diff)
 cv2.waitKey(0)
 #cv2.destroyAllWindows()
 
