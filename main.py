@@ -1,13 +1,18 @@
 import pyautogui
 from threading import Thread
-import pyscreeze
+import customtkinter
 import numpy as np
 import cv2
 import time
 
+pyautogui.FAILSAFE = False
+
 #screen = pyautogui.screenshot('zdj.png',region=(250,205,1420,760))
 #screen1 = pyautogui.screenshot('zdj1.png',region=(250,205,1420,760))
-zdj = pyautogui.screenshot('zdj.png',region=(250,205,1420,760))
+#zdj = pyautogui.screenshot('zdj.png',region=(250,205,1420,760))
+
+customtkinter.set_appearance_mode("dark")
+customtkinter.set_default_color_theme("green")
 
 screen_X = 250
 screen_Y = 205
@@ -22,7 +27,7 @@ def BotLoop():
     priev_img = cv2.cvtColor(priev_img, cv2.COLOR_BGR2GRAY)
     while(bot_run == True):
         current_img = Screenshot(screen_X, screen_Y, screen_W, screen_H)
-        time.sleep(5)
+        time.sleep(3)
         current_img = cv2.cvtColor(current_img, cv2.COLOR_BGR2GRAY)
 
         diff = Diff(current_img, priev_img)
@@ -43,19 +48,16 @@ def BotLoop():
 
         pyautogui.moveTo(int(centers[0][0] + 250), int(centers[0][1] + 205))
 
-        time.sleep(1)
-        zuk = pyautogui.locateCenterOnScreen("zuk.png")
-        time.sleep(1)
-        if (zuk != None):
+        boss = pyautogui.locateCenterOnScreen("boss.png", confidence=0.8)
+        if (boss != None):
             pyautogui.click()
             time.sleep(1)
             pyautogui.hotkey("f")
             time.sleep(1)
             pyautogui.hotkey("z")
 
-        time.sleep(1)
+
         pot = pyautogui.locateCenterOnScreen("potwierdz.png")
-        time.sleep(1)
         if (pot != None):
             pyautogui.moveTo(int(pot[0]), int(pot[1]))
             pyautogui.click()
@@ -87,21 +89,48 @@ def LocateObj(diff):
 
 def Main():
     global bot_run
-    new_thread = Thread(target=BotLoop)
-    new_thread.start()
-    while(True):
-        xD = input()
-        if(xD == 'q'):
-            bot_run = False
-            break
 
+    root = customtkinter.CTk()
+    root.geometry("230x300")
+
+    frame = customtkinter.CTkFrame(master=root)
+    frame.pack(pady=20, padx=60, fill="both", expand=True)
+
+
+    label = customtkinter.CTkLabel(master=frame, text="Bot")
+    label.pack(pady=12, padx=10)
+
+    global status
+    status = customtkinter.CTkLabel(master=frame, text="Bot jest OFF")
+    status.pack(pady=6, padx=5)
+
+    def Start():
+        global new_thread
+        new_thread = Thread(target=BotLoop)
+        new_thread.start()
+
+        status.configure(text="Bot jest ON")
+        status.pack(pady=6, padx=5)
+
+    button = customtkinter.CTkButton(master=frame, text="Start", command=Start)
+    button.pack(pady=12, padx=10)
+
+    def Exit():
+        global bot_run
+        bot_run = False
+
+        status.configure(text="Bot jest OFF")
+        status.pack(pady=6, padx=5)
+
+    button = customtkinter.CTkButton(master=frame, text="Stop", command=Exit)
+    button.pack(pady=12, padx=10)
+
+    root.mainloop()
     new_thread.join()
 
-Main()
+if __name__ == "__main__":
+    Main()
 #cv2.imshow("difference", diff)
 cv2.waitKey(0)
 #cv2.destroyAllWindows()
-
-
-
 
