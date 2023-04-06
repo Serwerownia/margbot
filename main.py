@@ -16,7 +16,7 @@ pyautogui.FAILSAFE = False
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("green")
 
-#future_time = datetime.datetime.now() + datetime.timedelta(seconds=30)
+future_time = datetime.datetime.now() + datetime.timedelta(minutess=2)
 bot_run = True
 
 screen_X = 250
@@ -33,7 +33,6 @@ def BotLoop():
     priev_img = Screenshot(screen_X, screen_Y, screen_W, screen_H)
     priev_img = cv2.cvtColor(priev_img, cv2.COLOR_BGR2GRAY)
     while(bot_run == True):
-        """
         while datetime.datetime.now() >= future_time:
             pyautogui.keyDown("a")
             time.sleep(0.5)
@@ -42,8 +41,7 @@ def BotLoop():
             time.sleep(0.5)
             pyautogui.keyUp("d")
 
-            future_time = datetime.datetime.now() + datetime.timedelta(seconds=30)
-        """
+            future_time = datetime.datetime.now() + datetime.timedelta(minutes=2)
 
         current_img = Screenshot(screen_X, screen_Y, screen_W, screen_H)
         time.sleep(3)
