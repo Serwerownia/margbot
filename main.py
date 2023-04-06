@@ -1,3 +1,4 @@
+import datetime
 import pyautogui
 from threading import Thread
 import customtkinter
@@ -11,21 +12,39 @@ pyautogui.FAILSAFE = False
 #screen1 = pyautogui.screenshot('zdj1.png',region=(250,205,1420,760))
 #zdj = pyautogui.screenshot('zdj.png',region=(250,205,1420,760))
 
+
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("green")
+
+#future_time = datetime.datetime.now() + datetime.timedelta(seconds=30)
+bot_run = True
 
 screen_X = 250
 screen_Y = 205
 screen_W = 1420
 screen_H = 760
 
+
 bot_run = True
 
 def BotLoop():
+    global future_time
     current_img = None
     priev_img = Screenshot(screen_X, screen_Y, screen_W, screen_H)
     priev_img = cv2.cvtColor(priev_img, cv2.COLOR_BGR2GRAY)
     while(bot_run == True):
+        """
+        while datetime.datetime.now() >= future_time:
+            pyautogui.keyDown("a")
+            time.sleep(0.5)
+            pyautogui.keyUp("a")
+            pyautogui.keyDown("d")
+            time.sleep(0.5)
+            pyautogui.keyUp("d")
+
+            future_time = datetime.datetime.now() + datetime.timedelta(seconds=30)
+        """
+
         current_img = Screenshot(screen_X, screen_Y, screen_W, screen_H)
         time.sleep(3)
         current_img = cv2.cvtColor(current_img, cv2.COLOR_BGR2GRAY)
@@ -87,8 +106,10 @@ def LocateObj(diff):
 
     return centers
 
+new_thread = None
 def Main():
     global bot_run
+    global new_thread
 
     root = customtkinter.CTk()
     root.geometry("230x300")
@@ -103,6 +124,14 @@ def Main():
     global status
     status = customtkinter.CTkLabel(master=frame, text="Bot jest OFF")
     status.pack(pady=6, padx=5)
+
+    """
+    def Test():
+        print("lol")
+
+    button = customtkinter.CTkButton(master=frame, text="Test", command=Test)
+    button.pack(pady=12, padx=10)
+    """
 
     def Start():
         global new_thread
@@ -126,11 +155,12 @@ def Main():
     button.pack(pady=12, padx=10)
 
     root.mainloop()
-    new_thread.join()
+    if(new_thread!=None):
+        new_thread.join()
 
 if __name__ == "__main__":
     Main()
+
 #cv2.imshow("difference", diff)
 cv2.waitKey(0)
 #cv2.destroyAllWindows()
-
